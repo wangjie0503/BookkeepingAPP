@@ -37,6 +37,12 @@ class PeriodRepository {
     return rows.map(_toModel).toList();
   }
 
+  Stream<List<BudgetPeriod>> watchAll() =>
+      (_database.select(_database.budgetPeriods)
+            ..orderBy([(table) => OrderingTerm.asc(table.startAt)]))
+          .watch()
+          .map((rows) => rows.map(_toModel).toList());
+
   /// Creates once without overwriting an existing period's budget snapshot.
   /// The unique `(label_year, label_month)` constraint resolves concurrent
   /// attempts; both callers then read back the same persisted period.

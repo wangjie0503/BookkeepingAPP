@@ -13,22 +13,23 @@ class PeriodService {
   final SettingsRepository _settingsRepository;
   final DateTime Function() _clock;
 
-  /// Compatibility entry point: only the current period may be created.
-  /// Missing historical periods must remain missing so they cannot accidentally
-  /// receive today's default-budget snapshot.
+  /// Returns the period containing [date], creating it when it is missing.
+  ///
+  /// A past expense is a valid backfill. A missing historical period snapshots
+  /// the default budget that is configured on the day it is created.
   Future<BudgetPeriod> ensurePeriodFor(DateTime date) async {
     final now = _clock();
     if (date.isAfter(now)) {
       throw ArgumentError.value(date, 'date', '不能创建未来生活费周期');
     }
+    final existing = await _periodRepository.findContaining(date);
+    if (existing != null) return existing;
     final settings = await _settingsRepository.get();
-    final requested = calculate(date, settings.fundingDay);
-    final current = calculate(now, settings.fundingDay);
-    if (requested.labelYear != current.labelYear ||
-        requested.labelMonth != current.labelMonth) {
-      throw StateError('历史周期只能读取，不能补建');
-    }
-    return _ensureCurrentPeriod(now, settings.defaultBudgetJiao, current);
+    return _ensureCurrentPeriod(
+      now,
+      settings.defaultBudgetJiao,
+      calculate(date, settings.fundingDay),
+    );
   }
 
   Future<BudgetPeriod> ensureCurrentPeriod() async {
@@ -46,6 +47,13 @@ class PeriodService {
   /// Reads any stored period without creating historical or future rows.
   Future<BudgetPeriod?> findExistingPeriodFor(DateTime date) =>
       _periodRepository.findContaining(date);
+
+  Future<void> updateBudget(int periodId, int budgetJiao) {
+    if (budgetJiao < 0) {
+      throw ArgumentError.value(budgetJiao, 'budgetJiao', '预算不能小于 ¥0。');
+    }
+    return _periodRepository.updateBudget(periodId, budgetJiao, _clock());
+  }
 
   Future<BudgetPeriod> _ensureCurrentPeriod(
     DateTime now,

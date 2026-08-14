@@ -66,21 +66,22 @@ void main() {
     );
 
     test(
-      'does not insert historical periods and rejects future creation',
+      'creates a missing historical period with today\'s default snapshot',
       () async {
         final service = serviceAt(DateTime(2026, 9, 26, 12));
         final historicalDate = DateTime(2026, 8, 26);
+        await settings.updateDefaultBudget(4321);
 
-        expect(await service.findExistingPeriodFor(historicalDate), isNull);
-        await expectLater(
-          service.ensurePeriodFor(historicalDate),
-          throwsStateError,
-        );
+        final created = await service.ensurePeriodFor(historicalDate);
+
+        expect(created.labelYear, 2026);
+        expect(created.labelMonth, 8);
+        expect(created.budgetJiao, 4321);
+        expect(await service.findExistingPeriodFor(historicalDate), isNotNull);
         await expectLater(
           service.ensurePeriodFor(DateTime(2026, 10, 1)),
           throwsArgumentError,
         );
-        expect(await periods.getAll(), isEmpty);
       },
     );
 
@@ -97,6 +98,18 @@ void main() {
         expect(august.budgetJiao, 1000);
         expect(september.budgetJiao, 2000);
         expect((await periods.findByLabel(2026, 8))!.budgetJiao, 1000);
+      },
+    );
+
+    test(
+      'allows one persisted period budget to be changed independently',
+      () async {
+        await settings.updateDefaultBudget(1000);
+        final august = await serviceAt(augustNow).ensureCurrentPeriod();
+        await serviceAt(augustNow).updateBudget(august.id, 4567);
+
+        expect((await periods.findByLabel(2026, 8))!.budgetJiao, 4567);
+        expect((await settings.get()).defaultBudgetJiao, 1000);
       },
     );
 

@@ -35,11 +35,25 @@ class Money {
         (pieces.length == 2 ? int.parse(pieces.last) : 0);
   }
 
+  static int? tryParseNonNegativeJiao(String input) {
+    try {
+      return parseNonNegativeJiao(input);
+    } on FormatException {
+      return null;
+    }
+  }
+
   static String formatJiao(int jiao, {String symbol = '¥'}) {
     final absolute = jiao.abs();
     final sign = jiao < 0 ? '-' : '';
     final yuan = absolute ~/ 10;
     final decimal = absolute % 10;
     return '$sign$symbol$yuan${decimal == 0 ? '' : '.$decimal'}';
+  }
+
+  static String formatInputJiao(int jiao) {
+    final yuan = jiao ~/ 10;
+    final decimal = jiao % 10;
+    return '$yuan${decimal == 0 ? '' : '.$decimal'}';
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../features/category_management/category_management_page.dart';
+import '../features/expense_entry/expense_entry_page.dart';
+import '../features/expense_list/expense_list_page.dart';
 import '../features/settings/settings_page.dart';
 
 class AppShell extends StatefulWidget {
@@ -24,8 +26,8 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 760;
     final page = switch (_index) {
-      0 => const _StagePlaceholderPage(title: '记一笔', message: '记账录入将在第二阶段完成。'),
-      1 => const _StagePlaceholderPage(title: '支出列表', message: '支出列表将在第二阶段完成。'),
+      0 => const ExpenseEntryPage(),
+      1 => const ExpenseListPage(),
       2 => const CategoryManagementPage(),
       _ => const _StagePlaceholderPage(title: '概述统计', message: '统计分析将在第三阶段完成。'),
     };
