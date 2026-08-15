@@ -9,10 +9,13 @@ import '../domain/models/app_settings.dart';
 import '../domain/models/category.dart';
 import '../domain/models/budget_period.dart';
 import '../domain/models/expense_list_item.dart';
+import '../domain/models/statistics_snapshot.dart';
 import '../domain/services/category_service.dart';
+import '../domain/services/csv_export_service.dart';
 import '../domain/services/expense_service.dart';
 import '../domain/services/period_service.dart';
 import '../domain/services/settings_service.dart';
+import '../domain/services/statistics_service.dart';
 import '../shared/date_range.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -52,6 +55,12 @@ final expenseServiceProvider = Provider<ExpenseService>(
     ref.watch(periodServiceProvider),
   ),
 );
+final statisticsServiceProvider = Provider<StatisticsService>(
+  (ref) => StatisticsService(ref.watch(expenseRepositoryProvider)),
+);
+final csvExportServiceProvider = Provider<CsvExportService>(
+  (ref) => CsvExportService(ref.watch(expenseRepositoryProvider)),
+);
 
 final categoriesProvider = StreamProvider<List<Category>>(
   (ref) => ref.watch(categoryServiceProvider).watchAll(),
@@ -66,3 +75,22 @@ final expensesInRangeProvider = StreamProvider.autoDispose
     .family<List<ExpenseListItem>, DateRange>(
       (ref, range) => ref.watch(expenseRepositoryProvider).watchInRange(range),
     );
+final statisticsProvider = StreamProvider.autoDispose
+    .family<StatisticsSnapshot, StatisticsRequest>(
+      (ref, request) => ref
+          .watch(statisticsServiceProvider)
+          .watchForRange(request.range, budgetJiao: request.budgetJiao),
+    );
+
+class StatisticsRequest {
+  const StatisticsRequest(this.range, {this.budgetJiao});
+  final DateRange range;
+  final int? budgetJiao;
+  @override
+  bool operator ==(Object other) =>
+      other is StatisticsRequest &&
+      other.range == range &&
+      other.budgetJiao == budgetJiao;
+  @override
+  int get hashCode => Object.hash(range, budgetJiao);
+}

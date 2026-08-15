@@ -159,16 +159,7 @@ class _ExpenseListPageState extends ConsumerState<ExpenseListPage> {
     setState(() {
       _customRange = DateRange(
         start: DateUtils.dateOnly(picked.start),
-        end: DateTime(
-          picked.end.year,
-          picked.end.month,
-          picked.end.day,
-          23,
-          59,
-          59,
-          999,
-          999,
-        ),
+        end: DateRange.endOfDay(picked.end),
       );
     });
   }

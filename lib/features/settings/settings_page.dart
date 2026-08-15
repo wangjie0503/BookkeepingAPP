@@ -108,7 +108,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       final amount = Money.parseNonNegativeJiao(_budgetController.text);
       setState(() => _saving = true);
       await ref.read(settingsServiceProvider).updateDefaultBudget(amount);
-      if (mounted) _showMessage('默认预算已保存');
+      if (mounted) Navigator.of(context).pop();
     } on FormatException catch (error) {
       _showMessage(error.message);
     } finally {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../features/category_management/category_management_page.dart';
 import '../features/expense_entry/expense_entry_page.dart';
 import '../features/expense_list/expense_list_page.dart';
+import '../features/overview/overview_page.dart';
 import '../features/settings/settings_page.dart';
 
 class AppShell extends StatefulWidget {
@@ -29,7 +30,7 @@ class _AppShellState extends State<AppShell> {
       0 => const ExpenseEntryPage(),
       1 => const ExpenseListPage(),
       2 => const CategoryManagementPage(),
-      _ => const _StagePlaceholderPage(title: '概述统计', message: '统计分析将在第三阶段完成。'),
+      _ => const OverviewPage(),
     };
     final content = Scaffold(
       appBar: AppBar(
@@ -93,36 +94,4 @@ class _NavigationItem {
   const _NavigationItem(this.label, this.icon);
   final String label;
   final IconData icon;
-}
-
-class _StagePlaceholderPage extends StatelessWidget {
-  const _StagePlaceholderPage({required this.title, required this.message});
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 440),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.construction_outlined,
-                size: 40,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 12),
-              Text(title, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 8),
-              Text(message, textAlign: TextAlign.center),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
 }

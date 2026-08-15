@@ -41,6 +41,36 @@ class ExpenseRepository {
     );
   }
 
+  Future<List<ExpenseListItem>> getInRange(DateRange range) async {
+    final expenses = _database.expenses;
+    final secondary = _database.categories.createAlias('secondary_category');
+    final primary = _database.categories.createAlias('primary_category');
+    final rows =
+        await (_database.select(expenses).join([
+                innerJoin(
+                  secondary,
+                  secondary.id.equalsExp(expenses.secondaryCategoryId),
+                ),
+                innerJoin(primary, primary.id.equalsExp(secondary.parentId)),
+              ])
+              ..where(
+                expenses.spentAt.isBiggerOrEqualValue(range.start) &
+                    expenses.spentAt.isSmallerOrEqualValue(range.end),
+              )
+              ..orderBy([OrderingTerm.desc(expenses.spentAt)]))
+            .get();
+    return rows
+        .map(
+          (row) => ExpenseListItem(
+            expense: _toExpense(row.readTable(expenses)),
+            primaryCategoryId: row.readTable(primary).id,
+            primaryCategoryName: row.readTable(primary).name,
+            secondaryCategoryName: row.readTable(secondary).name,
+          ),
+        )
+        .toList();
+  }
+
   Future<Expense?> findById(int id) async {
     final row = await (_database.select(
       _database.expenses,

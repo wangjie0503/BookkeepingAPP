@@ -5,6 +5,10 @@ class DateRange {
   final DateTime start;
   final DateTime end;
 
+  /// The inclusive end of a local calendar day for date-range queries.
+  static DateTime endOfDay(DateTime date) =>
+      DateTime(date.year, date.month, date.day, 23, 59, 59, 999, 999);
+
   bool contains(DateTime value) =>
       !value.isBefore(start) && !value.isAfter(end);
 

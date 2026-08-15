@@ -309,34 +309,58 @@ Future<String?> _askForName(
   BuildContext context, {
   required String title,
   String initialValue = '',
-}) async {
-  final controller = TextEditingController(text: initialValue);
-  final result = await showDialog<String>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(title),
-      content: TextField(
-        key: const Key('category-name-input'),
-        controller: controller,
-        autofocus: true,
-        textInputAction: TextInputAction.done,
-        onSubmitted: (_) => Navigator.pop(dialogContext, controller.text),
-        decoration: const InputDecoration(labelText: '分类名称'),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(dialogContext, controller.text),
-          child: const Text('保存'),
-        ),
-      ],
+}) => showDialog<String>(
+  context: context,
+  builder: (_) => _CategoryNameDialog(title: title, initialValue: initialValue),
+);
+
+class _CategoryNameDialog extends StatefulWidget {
+  const _CategoryNameDialog({required this.title, required this.initialValue});
+
+  final String title;
+  final String initialValue;
+
+  @override
+  State<_CategoryNameDialog> createState() => _CategoryNameDialogState();
+}
+
+class _CategoryNameDialogState extends State<_CategoryNameDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(widget.title),
+    content: TextField(
+      key: const Key('category-name-input'),
+      controller: _controller,
+      autofocus: true,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => Navigator.pop(context, _controller.text),
+      decoration: const InputDecoration(labelText: '分类名称'),
     ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('取消'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.pop(context, _controller.text),
+        child: const Text('保存'),
+      ),
+    ],
   );
-  controller.dispose();
-  return result;
 }
 
 void _showMessage(BuildContext context, String message) {
