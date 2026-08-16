@@ -51,28 +51,38 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                 children: [
                   Text('默认月预算', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 8),
-                  TextField(
-                    key: const Key('default-budget-input'),
-                    controller: _budgetController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: '金额（元）',
-                      prefixText: '¥ ',
-                      helperText: '新创建的生活费周期会复制当前默认预算。',
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextField(
+                            key: const Key('default-budget-input'),
+                            controller: _budgetController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: '金额（元）',
+                              prefixText: '¥ ',
+                              helperText: '新创建的生活费周期会复制当前默认预算。',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton(
+                            onPressed: _saving ? null : _saveBudget,
+                            child: const Text('保存默认预算'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: _saving ? null : _saveBudget,
-                    child: const Text('保存默认预算'),
-                  ),
-                  const Divider(height: 48),
+                  const SizedBox(height: 28),
                   Text('生活费发放日', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 8),
                   Text(
@@ -81,18 +91,26 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         : '已有周期或支出，发放日已锁定为每月 ${value.fundingDay} 日。',
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    initialValue: value.fundingDay,
-                    decoration: const InputDecoration(labelText: '每月发放日'),
-                    items: [
-                      for (var day = 1; day <= 28; day++)
-                        DropdownMenuItem(value: day, child: Text('每月 $day 日')),
-                    ],
-                    onChanged: _canChangeFundingDay == true
-                        ? (day) {
-                            if (day != null) _saveFundingDay(day);
-                          }
-                        : null,
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: DropdownButtonFormField<int>(
+                        initialValue: value.fundingDay,
+                        decoration: const InputDecoration(labelText: '每月发放日'),
+                        items: [
+                          for (var day = 1; day <= 28; day++)
+                            DropdownMenuItem(
+                              value: day,
+                              child: Text('每月 $day 日'),
+                            ),
+                        ],
+                        onChanged: _canChangeFundingDay == true
+                            ? (day) {
+                                if (day != null) _saveFundingDay(day);
+                              }
+                            : null,
+                      ),
+                    ),
                   ),
                 ],
               ),

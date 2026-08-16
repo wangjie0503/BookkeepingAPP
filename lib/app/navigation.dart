@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'theme.dart';
 import '../features/category_management/category_management_page.dart';
 import '../features/expense_entry/expense_entry_page.dart';
 import '../features/expense_list/expense_list_page.dart';
@@ -67,12 +68,34 @@ class _AppShellState extends State<AppShell> {
       body: Row(
         children: [
           NavigationRail(
+            minWidth: 112,
             selectedIndex: _index,
             labelType: NavigationRailLabelType.all,
             onDestinationSelected: (index) => setState(() => _index = index),
             leading: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Icon(Icons.account_balance_wallet_outlined),
+              padding: EdgeInsets.fromLTRB(12, 20, 12, 24),
+              child: Column(
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppPalette.mint,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Icon(
+                        Icons.account_balance_wallet_outlined,
+                        color: AppPalette.tealDark,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '个人记账',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
+                ],
+              ),
             ),
             destinations: [
               for (final item in _items)

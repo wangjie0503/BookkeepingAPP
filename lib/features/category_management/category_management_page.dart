@@ -30,13 +30,35 @@ class _CategoryList extends ConsumerWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 840),
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           children: [
             Text('分类管理', style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(
-              '管理一级和二级分类。停用分类会保留历史账单，名称仍不可重复。',
-              style: Theme.of(context).textTheme.bodyMedium,
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
+                      child: Icon(
+                        Icons.account_tree_outlined,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '管理一级和二级分类。停用分类会保留历史账单，名称仍不可重复。',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             if (primaries.isEmpty)
@@ -82,11 +104,25 @@ class _PrimaryCategoryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => Card(
     margin: const EdgeInsets.only(bottom: 12),
+    clipBehavior: Clip.antiAlias,
     child: ExpansionTile(
       initiallyExpanded: primary.isActive,
+      tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: CircleAvatar(
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        child: Icon(
+          Icons.folder_outlined,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
+      ),
       title: Row(
         children: [
-          Expanded(child: Text(primary.name)),
+          Expanded(
+            child: Text(
+              primary.name,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
           _StatusChip(isActive: primary.isActive),
         ],
       ),
@@ -96,7 +132,10 @@ class _PrimaryCategoryCard extends ConsumerWidget {
         for (final child in children)
           ListTile(
             contentPadding: const EdgeInsets.only(left: 32, right: 8),
-            leading: const Icon(Icons.subdirectory_arrow_right_outlined),
+            leading: const Icon(
+              Icons.subdirectory_arrow_right_outlined,
+              size: 20,
+            ),
             title: Text(child.name),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -126,6 +165,10 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Chip(
     visualDensity: VisualDensity.compact,
+    backgroundColor: isActive
+        ? Theme.of(context).colorScheme.primaryContainer
+        : Theme.of(context).colorScheme.surfaceContainerHighest,
+    side: BorderSide.none,
     label: Text(isActive ? '启用' : '已停用'),
   );
 }

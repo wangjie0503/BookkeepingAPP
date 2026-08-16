@@ -52,90 +52,108 @@ class _ExpenseEntryPageState extends ConsumerState<ExpenseEntryPage> {
             .toList();
         final selectedSecondary =
             _secondaryId ?? (secondaries.isEmpty ? null : secondaries.first.id);
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Text('记一笔', style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 20),
-            TextField(
-              key: const Key('expense_amount_field'),
-              controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: '金额（元）',
-                prefixText: '¥ ',
-                hintText: '例如 18.5',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text('一级支出', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            if (primaryCategories.isEmpty)
-              const Text('请先到分类管理中添加并启用一级分类。')
-            else
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final category in primaryCategories)
-                    ChoiceChip(
-                      label: Text(category.name),
-                      selected: selectedPrimary == category.id,
-                      onSelected: (_) => setState(() {
-                        _primaryId = category.id;
-                        _secondaryId = null;
-                      }),
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+              children: [
+                Text('记一笔', style: Theme.of(context).textTheme.headlineSmall),
+                const SizedBox(height: 4),
+                Text(
+                  '快速记录这一笔日常支出',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: TextField(
+                      key: const Key('expense_amount_field'),
+                      controller: _amountController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                      decoration: const InputDecoration(
+                        labelText: '金额（元）',
+                        prefixText: '¥ ',
+                        hintText: '例如 18.5',
+                      ),
                     ),
-                ],
-              ),
-            const SizedBox(height: 24),
-            Text('二级支出', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            if (selectedPrimary == null)
-              const Text('请先选择一级分类。')
-            else if (secondaries.isEmpty)
-              const Text('该一级分类下没有可用的二级分类。')
-            else
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final category in secondaries)
-                    ChoiceChip(
-                      label: Text(category.name),
-                      selected: selectedSecondary == category.id,
-                      onSelected: (_) =>
-                          setState(() => _secondaryId = category.id),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text('一级支出', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                if (primaryCategories.isEmpty)
+                  const Text('请先到分类管理中添加并启用一级分类。')
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final category in primaryCategories)
+                        ChoiceChip(
+                          label: Text(category.name),
+                          selected: selectedPrimary == category.id,
+                          onSelected: (_) => setState(() {
+                            _primaryId = category.id;
+                            _secondaryId = null;
+                          }),
+                        ),
+                    ],
+                  ),
+                const SizedBox(height: 20),
+                Text('二级支出', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                if (selectedPrimary == null)
+                  const Text('请先选择一级分类。')
+                else if (secondaries.isEmpty)
+                  const Text('该一级分类下没有可用的二级分类。')
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final category in secondaries)
+                        ChoiceChip(
+                          label: Text(category.name),
+                          selected: selectedSecondary == category.id,
+                          onSelected: (_) =>
+                              setState(() => _secondaryId = category.id),
+                        ),
+                    ],
+                  ),
+                const SizedBox(height: 20),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.schedule_outlined),
+                    title: const Text('消费时间'),
+                    subtitle: Text(
+                      DateFormat('yyyy年M月d日 HH:mm').format(_spentAt),
                     ),
-                ],
-              ),
-            const SizedBox(height: 24),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.schedule_outlined),
-                title: const Text('消费时间'),
-                subtitle: Text(DateFormat('yyyy年M月d日 HH:mm').format(_spentAt)),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: _pickSpentAt,
-              ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _pickSpentAt,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  key: const Key('save_expense_button'),
+                  onPressed: _saving ? null : () => _save(selectedSecondary),
+                  icon: _saving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.save_outlined),
+                  label: const Text('保存支出'),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              key: const Key('save_expense_button'),
-              onPressed: _saving ? null : () => _save(selectedSecondary),
-              icon: _saving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save_outlined),
-              label: const Text('保存支出'),
-            ),
-          ],
+          ),
         );
       },
     );

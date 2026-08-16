@@ -63,30 +63,37 @@ class _ExpenseListPageState extends ConsumerState<ExpenseListPage> {
     final range =
         _customRange ?? DateRange(start: selected.startAt, end: selected.endAt);
     final expenses = ref.watch(expensesInRangeProvider(range));
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text('支出列表', style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 12),
-        ExpenseRangeSelector(
-          periods: periods,
-          selected: selected,
-          customRange: _customRange,
-          onPeriodChanged: (period) => setState(() {
-            _selectedPeriodId = period.id;
-            _customRange = null;
-          }),
-          onChooseRange: _chooseCustomRange,
-          onReturnToPeriod: () => setState(() => _customRange = null),
-          onEditBudget: () => _editPeriodBudget(selected),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 920),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          children: [
+            Text('支出列表', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 4),
+            Text('按时间回看每一笔消费', style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 12),
+            ExpenseRangeSelector(
+              periods: periods,
+              selected: selected,
+              customRange: _customRange,
+              onPeriodChanged: (period) => setState(() {
+                _selectedPeriodId = period.id;
+                _customRange = null;
+              }),
+              onChooseRange: _chooseCustomRange,
+              onReturnToPeriod: () => setState(() => _customRange = null),
+              onEditBudget: () => _editPeriodBudget(selected),
+            ),
+            const SizedBox(height: 16),
+            expenses.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Text('支出加载失败：$error'),
+              data: _buildExpenseGroups,
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-        expenses.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Text('支出加载失败：$error'),
-          data: _buildExpenseGroups,
-        ),
-      ],
+      ),
     );
   }
 
@@ -110,12 +117,25 @@ class _ExpenseListPageState extends ConsumerState<ExpenseListPage> {
       children: [
         for (final day in days) ...[
           Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 4),
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                DateFormat('yyyy年M月d日 EEEE', 'zh_CN').format(day),
-                style: Theme.of(context).textTheme.titleSmall,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  DateFormat('yyyy年M月d日 EEEE', 'zh_CN').format(day),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ),
@@ -125,6 +145,15 @@ class _ExpenseListPageState extends ConsumerState<ExpenseListPage> {
               children: [
                 for (final item in groups[day]!)
                   ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
+                      child: Icon(
+                        Icons.receipt_long_outlined,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
                     title: Text(
                       '${item.primaryCategoryName} · ${item.secondaryCategoryName}',
                     ),
@@ -133,7 +162,10 @@ class _ExpenseListPageState extends ConsumerState<ExpenseListPage> {
                     ),
                     trailing: Text(
                       Money.formatJiao(item.expense.amountJiao),
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     onTap: () => _openEditor(item),
                   ),

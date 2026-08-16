@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/providers.dart';
+import '../../app/theme.dart';
 import '../../domain/models/budget_period.dart';
 import '../../domain/models/statistics_snapshot.dart';
 import '../../domain/services/csv_export_service.dart';
@@ -64,36 +65,49 @@ class _OverviewPageState extends ConsumerState<OverviewPage> {
         ),
       ),
     );
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text('概述统计', style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 12),
-        _Selector(
-          periods: periods,
-          period: period,
-          custom: _customRange,
-          onPeriod: (p) => setState(() {
-            _periodId = p.id;
-            _customRange = null;
-          }),
-          onCustom: _chooseRange,
-          onReturn: () => setState(() => _customRange = null),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1080),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          children: [
+            Text('概述统计', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 4),
+            Text(
+              '看看这一期生活费主要花到了哪里',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            _Selector(
+              periods: periods,
+              period: period,
+              custom: _customRange,
+              onPeriod: (p) => setState(() {
+                _periodId = p.id;
+                _customRange = null;
+              }),
+              onCustom: _chooseRange,
+              onReturn: () => setState(() => _customRange = null),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _export(range),
+              icon: const Icon(Icons.file_download_outlined),
+              label: const Text('导出 CSV'),
+            ),
+            const SizedBox(height: 12),
+            stats.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Text('统计加载失败：$e'),
+              data: (snapshot) => _content(
+                snapshot,
+                period,
+                isCustomRange: _customRange != null,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: () => _export(range),
-          icon: const Icon(Icons.file_download_outlined),
-          label: const Text('导出 CSV'),
-        ),
-        const SizedBox(height: 12),
-        stats.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('统计加载失败：$e'),
-          data: (snapshot) =>
-              _content(snapshot, period, isCustomRange: _customRange != null),
-        ),
-      ],
+      ),
     );
   }
 
@@ -158,50 +172,116 @@ class _OverviewPageState extends ConsumerState<OverviewPage> {
             else
               ...cards,
             const SizedBox(height: 16),
-            Text('分类去向', style: Theme.of(context).textTheme.titleLarge),
-            SizedBox(
-              height: 230,
-              child: PieChart(
-                PieChartData(
-                  sections: [
-                    for (final p in s.primaryTotals)
-                      PieChartSectionData(
-                        value: p.amountJiao.toDouble(),
-                        title: '${p.name}\n${Money.formatJiao(p.amountJiao)}',
-                        radius: 76,
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('分类去向', style: Theme.of(context).textTheme.titleLarge),
+                    SizedBox(
+                      height: 230,
+                      child: PieChart(
+                        PieChartData(
+                          sectionsSpace: 3,
+                          centerSpaceRadius: 36,
+                          sections: [
+                            for (
+                              var index = 0;
+                              index < s.primaryTotals.length;
+                              index++
+                            )
+                              PieChartSectionData(
+                                color:
+                                    AppPalette.chartColors[index %
+                                        AppPalette.chartColors.length],
+                                value: s.primaryTotals[index].amountJiao
+                                    .toDouble(),
+                                title:
+                                    '${s.primaryTotals[index].name}\n${Money.formatJiao(s.primaryTotals[index].amountJiao)}',
+                                titleStyle: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                radius: 76,
+                              ),
+                          ],
+                        ),
                       ),
+                    ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 12),
             for (final p in s.primaryTotals)
-              ExpansionTile(
-                title: Text(p.name),
-                trailing: Text(Money.formatJiao(p.amountJiao)),
-                children: [
-                  for (final secondary in p.secondaryTotals)
-                    ListTile(
-                      title: Text(secondary.name),
-                      trailing: Text(Money.formatJiao(secondary.amountJiao)),
+              Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ExpansionTile(
+                  title: Text(
+                    p.name,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  trailing: Text(
+                    Money.formatJiao(p.amountJiao),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w700,
                     ),
-                ],
+                  ),
+                  children: [
+                    for (final secondary in p.secondaryTotals)
+                      ListTile(
+                        title: Text(secondary.name),
+                        trailing: Text(Money.formatJiao(secondary.amountJiao)),
+                      ),
+                  ],
+                ),
               ),
             const SizedBox(height: 16),
-            Text('每日趋势', style: Theme.of(context).textTheme.titleLarge),
-            SizedBox(
-              height: 220,
-              child: LineChart(
-                LineChartData(
-                  lineBarsData: [
-                    LineChartBarData(
-                      isCurved: true,
-                      spots: [
-                        for (var i = 0; i < s.dailyTotals.length; i++)
-                          FlSpot(
-                            i.toDouble(),
-                            s.dailyTotals[i].amountJiao.toDouble(),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('每日趋势', style: Theme.of(context).textTheme.titleLarge),
+                    SizedBox(
+                      height: 220,
+                      child: LineChart(
+                        LineChartData(
+                          gridData: FlGridData(
+                            show: true,
+                            getDrawingHorizontalLine: (_) => const FlLine(
+                              color: AppPalette.line,
+                              strokeWidth: 1,
+                            ),
+                            drawVerticalLine: false,
                           ),
-                      ],
+                          titlesData: const FlTitlesData(show: false),
+                          borderData: FlBorderData(show: false),
+                          lineBarsData: [
+                            LineChartBarData(
+                              isCurved: true,
+                              color: AppPalette.teal,
+                              barWidth: 3,
+                              dotData: const FlDotData(show: false),
+                              belowBarData: BarAreaData(
+                                show: true,
+                                color: AppPalette.mint,
+                              ),
+                              spots: [
+                                for (var i = 0; i < s.dailyTotals.length; i++)
+                                  FlSpot(
+                                    i.toDouble(),
+                                    s.dailyTotals[i].amountJiao.toDouble(),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
