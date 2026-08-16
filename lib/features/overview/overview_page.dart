@@ -350,30 +350,10 @@ class _OverviewPageState extends ConsumerState<OverviewPage> {
   );
 
   Future<void> _setPeriodBudget(BudgetPeriod period) async {
-    final controller = TextEditingController();
     final input = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('设置本期预算'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(labelText: '金额（元）'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-            child: const Text('保存'),
-          ),
-        ],
-      ),
+      builder: (_) => const _PeriodBudgetDialog(),
     );
-    controller.dispose();
     if (input == null || !mounted) return;
     try {
       final budget = Money.parseNonNegativeJiao(input);
@@ -409,6 +389,50 @@ class _OverviewPageState extends ConsumerState<OverviewPage> {
       () => ref.read(csvExportServiceProvider).export(range),
     );
   }
+}
+
+class _PeriodBudgetDialog extends StatefulWidget {
+  const _PeriodBudgetDialog();
+
+  @override
+  State<_PeriodBudgetDialog> createState() => _PeriodBudgetDialogState();
+}
+
+class _PeriodBudgetDialogState extends State<_PeriodBudgetDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('设置本期预算'),
+    content: TextField(
+      controller: _controller,
+      autofocus: true,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: const InputDecoration(labelText: '金额（元）'),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text('取消'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.of(context).pop(_controller.text),
+        child: const Text('保存'),
+      ),
+    ],
+  );
 }
 
 Future<void> showCsvExportFeedback(
